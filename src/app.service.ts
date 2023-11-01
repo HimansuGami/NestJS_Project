@@ -15,12 +15,12 @@ import { Query } from 'express-serve-static-core';
 import { EntityNotExist } from './custom-exception/entity-not-exist';
 import { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDTO } from './Modules/auth/DTOs/logInDTO';
+import { LoginDTO } from './DTOs/logInDTO';
 import * as bcrypt from 'bcryptjs';
 import { InvalidCredentials } from './custom-exception/invalid-credentials';
 import { Response } from 'express';
 import { use } from 'passport';
-import { SignUpDTO } from './Modules/auth/DTOs/signUpDTO';
+import { SignUpDTO } from './DTOs/signUpDTO';
 
 @Injectable()
 export class AppService {
@@ -65,21 +65,30 @@ export class AppService {
     };
   }
 
-  async createUser(user: UserSchema): Promise<UserSchema> {
+  async createUser(user: UserSchema , @Req() request: Request): Promise<UserSchema> {
+    const cookie = request.cookies['jwt'];
+    if(cookie == undefined) throw new UnauthorizedException('You are not Authorized Login First');
+    const data = await this.jwtService.verify(cookie);
+    if (!data) throw new UnauthorizedException('Unauthorized User');
+    const authorizesUser = await this.userModel.findById(data.id);
+    if (authorizesUser) {
+
+
     const existingUser = await this.userModel.findOne({
       userName: user.userName,
       description: user.description,
     });
-    console.log(existingUser);
 
     if (existingUser)
       throw new ConflictException('user with this name is already exist');
     const newUser = new this.userModel(user);
     return newUser.save();
   }
+  }
 
   async readUser(query: Query, @Req() request: Request) {
     const cookie = request.cookies['jwt'];
+    if(cookie == undefined) throw new UnauthorizedException('You are not Authorized Login First');
     const data = await this.jwtService.verify(cookie);
 
     if (!data) throw new UnauthorizedException();

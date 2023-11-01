@@ -15,8 +15,9 @@ import { UserDocument, UserSchema } from './Models/user.schema';
 import { userUpdateDTO } from './DTOs/userUpdateDTO';
 import { Query as ExpressQuery } from 'express-serve-static-core';
 import { Request, Response } from 'express';
-import { LoginDTO } from './Modules/auth/DTOs/logInDTO';
-import { SignUpDTO } from './Modules/auth/DTOs/signUpDTO';
+import { LoginDTO } from './DTOs/logInDTO';
+import { SignUpDTO } from './DTOs/signUpDTO';
+import { Student } from './Models/student.schema';
 @Controller('index')
 export class AppController {
   constructor(private readonly appService: AppService) {}
@@ -40,10 +41,10 @@ export class AppController {
   }
 
   @Post('create')
-  async createUser(@Body() userDTO: UserSchema) {
-    return this.appService.createUser(userDTO);
+  async createUser(@Body() userDTO: UserSchema, @Req() request: Request) {
+    return this.appService.createUser(userDTO,request);
   }
-
+  
   @Put('/:id')
   async updateUser(
     @Param('id') id: string,
